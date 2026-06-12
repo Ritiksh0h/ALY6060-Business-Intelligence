@@ -25,3 +25,5 @@ __pycache__/
 .idea/
 # OS generated
 Icon?
+.claude/
+.DS_Store
