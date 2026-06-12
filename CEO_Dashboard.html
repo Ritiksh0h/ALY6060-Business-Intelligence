@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortune 500 CEO Dashboard — ALY6060</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f8f6;color:#1a1a18;padding:24px;min-height:100vh}
+.db-wrap{max-width:1100px;margin:0 auto}
+.db-header{padding:0 0 18px;border-bottom:1px solid #e0dfd7;margin-bottom:22px}
+.db-title{font-size:20px;font-weight:600;color:#1a1a18;display:flex;align-items:center;gap:10px}
+.db-sub{font-size:12px;color:#73726c;margin-top:4px}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;align-items:center}
+.filter-label{font-size:11px;color:#73726c;margin-right:2px;font-weight:500}
+.chip{padding:5px 13px;border-radius:8px;border:1px solid #d3d1c7;font-size:11px;cursor:pointer;background:#fff;color:#5f5e5a;transition:all .15s;user-select:none;font-family:inherit}
+.chip:hover{border-color:#888780;color:#1a1a18}
+.chip.on{background:#e6f1fb;color:#0c447c;border-color:#85b7eb;font-weight:600}
+.chip.on.red{background:#fcebeb;color:#791f1f;border-color:#f09595}
+.chip.on.green{background:#eaf3de;color:#27500a;border-color:#97c459}
+.sep{width:1px;height:18px;background:#d3d1c7;margin:0 4px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:10px;padding:16px 18px;cursor:pointer;border:1px solid #e8e7e0;transition:border-color .15s}
+.kpi:hover{border-color:#888780}
+.kpi-lbl{font-size:10px;color:#73726c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;font-weight:500}
+.kpi-val{font-size:22px;font-weight:600;color:#1a1a18;line-height:1}
+.kpi-sub{font-size:10px;color:#888780;margin-top:5px}
+.kpi-val.up{color:#1d9e75}.kpi-val.dn{color:#e24b4a}.kpi-val.bl{color:#185fa5}
+.charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+.charts-row2{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.card{background:#fff;border:1px solid #e8e7e0;border-radius:12px;padding:18px}
+.card-title{font-size:13px;font-weight:600;color:#1a1a18;margin-bottom:3px}
+.card-sub{font-size:11px;color:#73726c;margin-bottom:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#73726c}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ceo-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.ceo-table th{font-size:10px;font-weight:600;color:#73726c;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid #e8e7e0;text-align:left;background:#fafaf8}
+.ceo-table td{padding:8px 10px;border-bottom:1px solid #f0efe8;color:#1a1a18;vertical-align:middle}
+.ceo-table tr:last-child td{border-bottom:none}
+.ceo-table tr.data-row{cursor:pointer;transition:background .1s}
+.ceo-table tr.data-row:hover td{background:#f5f4f0}
+.ceo-table tr.hi td{background:#e6f1fb}
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;vertical-align:middle;margin-right:7px}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600}
+.b-int{background:#e6f1fb;color:#0c447c}
+.b-ext{background:#fcebeb;color:#791f1f}
+.b-pos{background:#eaf3de;color:#27500a}
+.b-neg{background:#fcebeb;color:#791f1f}
+.b-neu{background:#f1efe8;color:#5f5e5a}
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.insight{border-left:3px solid #85b7eb;background:#e6f1fb;border-radius:0 8px 8px 0;padding:11px 14px}
+.insight p{font-size:11px;color:#0c447c;line-height:1.6}
+.insight strong{color:#042c53;font-weight:600}
+.warn-note{font-size:10px;color:#888780;margin-top:8px;font-style:italic}
+.story-banner{background:#1f3864;border-radius:12px;padding:18px 22px;margin-bottom:22px;color:#fff}
+.story-q{font-size:16px;font-weight:600;margin-bottom:5px}
+.story-a{font-size:12px;opacity:.8;line-height:1.55}
+@media(max-width:700px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .charts-row,.charts-row2{grid-template-columns:1fr}
+  .insights-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="db-wrap">
+
+<div class="story-banner">
+  <div class="story-q">Does internal vs. external hiring predict CEO success?</div>
+  <div class="story-a">ALY6060: Decision Support &amp; Business Intelligence &nbsp;·&nbsp; 10 Fortune 500 CEOs &nbsp;·&nbsp; 6 Industries &nbsp;·&nbsp; 2024 Data &nbsp;·&nbsp; Use filters below to explore the story</div>
+</div>
+
+<div class="db-header">
+  <div class="db-title">
+    <i class="ti ti-chart-bar" style="font-size:20px"></i>
+    Fortune 500 CEO dashboard
+  </div>
+  <div class="db-sub">Working With Business Partners assignment &nbsp;·&nbsp; Click chips to cross-filter all charts &nbsp;·&nbsp; Click CEO rows to highlight</div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Hire type</span>
+  <span class="chip on" id="f-all" onclick="setFilter('all')">All CEOs</span>
+  <span class="chip" id="f-int" onclick="setFilter('Internal')">Internal only</span>
+  <span class="chip" id="f-ext" onclick="setFilter('External')">External only</span>
+  <div class="sep"></div>
+  <span class="filter-label">Industry</span>
+  <span class="chip" id="fi-Tech" onclick="toggleInd('Tech')">Technology</span>
+  <span class="chip" id="fi-Health" onclick="toggleInd('Health')">Healthcare</span>
+  <span class="chip" id="fi-Finance" onclick="toggleInd('Finance')">Finance</span>
+  <span class="chip" id="fi-Other" onclick="toggleInd('Other')">Retail / Auto / Pharma</span>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-lbl">Avg tenure shown</div>
+    <div class="kpi-val bl" id="kpi-tenure">—</div>
+    <div class="kpi-sub" id="kpi-tenure-sub">years in role</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Avg rev growth shown</div>
+    <div class="kpi-val" id="kpi-growth">—</div>
+    <div class="kpi-sub" id="kpi-growth-sub">2024 fiscal year</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Avg compensation</div>
+    <div class="kpi-val" id="kpi-comp">—</div>
+    <div class="kpi-sub">total 2024 ($M)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">CEOs shown</div>
+    <div class="kpi-val bl" id="kpi-count">—</div>
+    <div class="kpi-sub" id="kpi-count-sub">of 10 total</div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="card">
+    <div class="card-title">Revenue growth by CEO (%) — 2024</div>
+    <div class="card-sub">Color = hire type &nbsp;·&nbsp; Sorted by performance &nbsp;·&nbsp; Green = internal, Red = external</div>
+    <div class="legend">
+      <span class="leg-item"><span class="leg-sq" style="background:#1d9e75"></span>Internal hire</span>
+      <span class="leg-item"><span class="leg-sq" style="background:#e24b4a"></span>External hire</span>
+    </div>
+    <div style="position:relative;width:100%;height:280px">
+      <canvas id="c-revgrowth" aria-label="Horizontal bar chart of 2024 CEO revenue growth"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Tenure vs. revenue growth — scatter</div>
+    <div class="card-sub">Bubble size = compensation ($M) &nbsp;·&nbsp; Green = internal, Red = external</div>
+    <div class="legend">
+      <span class="leg-item"><span style="width:10px;height:10px;border-radius:50%;background:#1d9e75;display:inline-block"></span>Internal</span>
+      <span class="leg-item"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;display:inline-block"></span>External</span>
+    </div>
+    <div style="position:relative;width:100%;height:280px">
+      <canvas id="c-scatter" aria-label="Bubble scatter plot of CEO tenure versus revenue growth"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="charts-row2">
+  <div class="card">
+    <div class="card-title">Compensation ($M) vs. growth — combo</div>
+    <div class="card-sub">Bars = comp &nbsp;·&nbsp; Blue line = rev growth % (right axis)</div>
+    <div style="position:relative;width:100%;height:230px">
+      <canvas id="c-combo" aria-label="Combo bar and line chart of CEO compensation versus revenue growth"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Hire type — avg performance radar</div>
+    <div class="card-sub">Normalised scores across 3 dimensions</div>
+    <div class="legend">
+      <span class="leg-item"><span class="leg-sq" style="background:#1d9e75"></span>Internal</span>
+      <span class="leg-item"><span class="leg-sq" style="background:#e24b4a"></span>External</span>
+    </div>
+    <div style="position:relative;width:100%;height:230px">
+      <canvas id="c-radar" aria-label="Radar chart comparing internal and external hire CEO performance"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">CEO-to-worker pay ratio</div>
+    <div class="card-sub">Publicly disclosed companies (SEC filings)</div>
+    <div style="position:relative;width:100%;height:230px">
+      <canvas id="c-ratio" aria-label="Bar chart of CEO to median worker pay ratios"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div class="card-title">CEO detail — click any row to highlight</div>
+  <div class="card-sub">Cross-filters KPI tiles above &nbsp;·&nbsp; All 10 Fortune 500 CEOs with verified 2024 data</div>
+  <table class="ceo-table" id="ceo-tbl">
+    <thead><tr>
+      <th style="width:21%">CEO</th>
+      <th style="width:13%">Company</th>
+      <th style="width:11%">Industry</th>
+      <th style="width:8%">Gender</th>
+      <th style="width:8%">Since</th>
+      <th style="width:9%">Tenure</th>
+      <th style="width:11%">Comp ($M)</th>
+      <th style="width:9%">Hire type</th>
+      <th style="width:10%">Rev growth</th>
+    </tr></thead>
+    <tbody id="ceo-body"></tbody>
+  </table>
+  <div class="warn-note">* TIAA is private — revenue growth not publicly disclosed. &nbsp;† Karen Lynch removed Oct 2024 — compensation is partial-year estimate.</div>
+</div>
+
+<div class="card">
+  <div class="card-title">Dashboard findings — linked to business partner argument</div>
+  <div class="card-sub">Each finding maps to a peer-reviewed source from the written report</div>
+  <div class="insights-grid">
+    <div class="insight"><p><strong>Finding 1 — internal hires outperform on growth:</strong> Internal hire CEOs averaged +9.6% revenue growth versus −4.7% for external hires. Longer tenure (10.1 yrs vs 4.7 yrs) allows embedded strategic HR structures to mature — consistent with Wach et al. (2022) on the mediating role of internal efficiency.</p></div>
+    <div class="insight"><p><strong>Finding 2 — confounding variable warning:</strong> All 3 external hires are women in healthcare and finance, industries facing structural headwinds in 2024 (Medicare Advantage reform, Medicaid pressure). Industry effects cannot be fully separated from hire-type effects at n=10.</p></div>
+    <div class="insight"><p><strong>Finding 3 — compensation does not predict performance:</strong> Nadella ($79.1M, +16%) and Lynch ($12M, −5%) show that pay level does not drive growth. Structural competency and organizational support matter more — supports Tactic 2 from the report (McCracken et al., 2017).</p></div>
+    <div class="insight"><p><strong>Finding 4 — pay disparity amplifies capture risk:</strong> Walmart's 930:1 ratio and GM's 310:1 illustrate environments where HR business partners face intense political pressure. Structural independence via dual reporting lines (Tactic 1) becomes critical — consistent with Gerpott (2015).</p></div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const ALL = [
+  {name:'Mary Barra',     initials:'MB', co:'Gen. Motors',   ind:'Other',  gender:'F', since:2014, tenure:11, comp:29.5, hire:'Internal', growth:-3,   ratio:310},
+  {name:'Andy Jassy',     initials:'AJ', co:'Amazon',        ind:'Tech',   gender:'M', since:2021, tenure:4,  comp:40.1, hire:'Internal', growth:11,   ratio:43},
+  {name:'Brian Moynihan', initials:'BM', co:'Bank of Amer.', ind:'Finance',gender:'M', since:2010, tenure:15, comp:35.0, hire:'Internal', growth:2,    ratio:null},
+  {name:'Satya Nadella',  initials:'SN', co:'Microsoft',     ind:'Tech',   gender:'M', since:2014, tenure:11, comp:79.1, hire:'Internal', growth:16,   ratio:408},
+  {name:'Sundar Pichai',  initials:'SP', co:'Alphabet',      ind:'Tech',   gender:'M', since:2015, tenure:10, comp:10.7, hire:'Internal', growth:14,   ratio:null},
+  {name:'Gail Boudreaux', initials:'GB', co:'Elevance',      ind:'Health', gender:'F', since:2017, tenure:7,  comp:20.5, hire:'External', growth:-4,   ratio:null},
+  {name:'David Ricks',    initials:'DR', co:'Eli Lilly',     ind:'Other',  gender:'M', since:2017, tenure:8,  comp:29.2, hire:'Internal', growth:32,   ratio:null},
+  {name:'Doug McMillon',  initials:'DM', co:'Walmart',       ind:'Other',  gender:'M', since:2014, tenure:11, comp:27.4, hire:'Internal', growth:6,    ratio:930},
+  {name:'T. Duckett',     initials:'TD', co:'TIAA',          ind:'Finance',gender:'F', since:2021, tenure:4,  comp:18.0, hire:'External', growth:null, ratio:null},
+  {name:'Karen Lynch',    initials:'KL', co:'CVS Health',    ind:'Health', gender:'F', since:2021, tenure:3,  comp:12.0, hire:'External', growth:-5,   ratio:null},
+];
+
+const INT_COL='#1d9e75', EXT_COL='#e24b4a', INT_BG='#1d9e7566', EXT_BG='#e24b4a66';
+let hireFilter='all', indFilters=new Set(), selectedRow=null;
+
+function visible(){
+  return ALL.filter(d=>{
+    if(hireFilter!=='all'&&d.hire!==hireFilter) return false;
+    if(indFilters.size>0&&!indFilters.has(d.ind)) return false;
+    return true;
+  });
+}
+function avg(arr,key){
+  const vals=arr.map(d=>d[key]).filter(v=>v!==null&&v!==undefined);
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+function updateKPIs(){
+  const v=visible();
+  const t=avg(v,'tenure'), g=avg(v.filter(d=>d.growth!==null),'growth'), c=avg(v,'comp');
+  const kT=document.getElementById('kpi-tenure');
+  const kG=document.getElementById('kpi-growth');
+  const kC=document.getElementById('kpi-comp');
+  kT.textContent=t!==null?t.toFixed(1)+'':'—';
+  kT.className='kpi-val bl';
+  if(g!==null){kG.textContent=(g>=0?'+':'')+g.toFixed(1)+'%';kG.className='kpi-val '+(g>=0?'up':'dn');}
+  else{kG.textContent='N/A';kG.className='kpi-val';}
+  kC.textContent=c!==null?'$'+c.toFixed(1)+'M':'—';
+  kC.className='kpi-val';
+  document.getElementById('kpi-count').textContent=v.length;
+  document.getElementById('kpi-tenure-sub').textContent='avg across '+v.length+' CEO'+(v.length!==1?'s':'');
+  document.getElementById('kpi-growth-sub').textContent=v.filter(d=>d.growth===null).length>0?'(excl. private/N/A)':'2024 fiscal year';
+  document.getElementById('kpi-count-sub').textContent='of 10 total';
+}
+
+function buildTable(){
+  const v=visible();
+  const body=document.getElementById('ceo-body');
+  body.innerHTML='';
+  v.forEach(d=>{
+    const tr=document.createElement('tr');
+    tr.className='data-row';
+    if(selectedRow===d.name) tr.classList.add('hi');
+    const ic=d.hire==='Internal'?'#b5d4f4':'#f7c1c1';
+    const tc=d.hire==='Internal'?'#042c53':'#501313';
+    const gv=d.growth!==null?((d.growth>=0?'+':'')+d.growth+'%'):'N/A*';
+    const gc=d.growth===null?'b-neu':d.growth>=0?'b-pos':'b-neg';
+    const indLabel=d.ind==='Other'?'Retail/Pharma':d.ind;
+    tr.innerHTML=`<td><span class="avatar" style="background:${ic};color:${tc}">${d.initials}</span>${d.name}</td>
+      <td>${d.co}</td><td>${indLabel}</td>
+      <td>${d.gender==='F'?'Female':'Male'}</td>
+      <td>${d.since}</td><td>${d.tenure} yrs</td>
+      <td>$${d.comp}M</td>
+      <td><span class="badge ${d.hire==='Internal'?'b-int':'b-ext'}">${d.hire}</span></td>
+      <td><span class="badge ${gc}">${gv}</span></td>`;
+    tr.onclick=()=>{selectedRow=selectedRow===d.name?null:d.name;buildTable();};
+    body.appendChild(tr);
+  });
+}
+
+let charts={};
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function buildRevChart(){
+  destroyChart('rev');
+  const v=[...visible()].filter(d=>d.growth!==null).sort((a,b)=>b.growth-a.growth);
+  const ctx=document.getElementById('c-revgrowth').getContext('2d');
+  charts['rev']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:v.map(d=>d.name.split(' ').slice(-1)[0]),
+      datasets:[{
+        label:'Revenue growth %',
+        data:v.map(d=>d.growth),
+        backgroundColor:v.map(d=>d.hire==='Internal'?INT_COL:EXT_COL),
+        borderRadius:4,borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+(c.raw>=0?'+':'')+c.raw+'%  ·  '+v[c.dataIndex].hire+' hire'}}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.06)'},ticks:{callback:v=>(v>=0?'+':'')+v+'%',font:{size:10}},min:-10,max:40},
+        y:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildScatter(){
+  destroyChart('scat');
+  const v=visible();
+  const intD=v.filter(d=>d.hire==='Internal'&&d.growth!==null).map(d=>({x:d.tenure,y:d.growth,r:Math.max(6,d.comp/9),label:d.name}));
+  const extD=v.filter(d=>d.hire==='External'&&d.growth!==null).map(d=>({x:d.tenure,y:d.growth,r:Math.max(6,d.comp/9),label:d.name}));
+  const ctx=document.getElementById('c-scatter').getContext('2d');
+  charts['scat']=new Chart(ctx,{
+    type:'bubble',
+    data:{datasets:[
+      {label:'Internal',data:intD,backgroundColor:INT_BG,borderColor:INT_COL,borderWidth:1.5},
+      {label:'External',data:extD,backgroundColor:EXT_BG,borderColor:EXT_COL,borderWidth:1.5}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.label+' ('+c.raw.x+'yr, '+(c.raw.y>=0?'+':'')+c.raw.y+'%)'}}},
+      scales:{
+        x:{title:{display:true,text:'Tenure (years)',font:{size:10}},min:0,max:18,grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:10}}},
+        y:{title:{display:true,text:'Rev growth %',font:{size:10}},min:-15,max:42,grid:{color:'rgba(0,0,0,.06)'},ticks:{callback:v=>(v>=0?'+':'')+v+'%',font:{size:10}}}
+      },
+      layout:{padding:10}
+    }
+  });
+}
+
+function buildCombo(){
+  destroyChart('combo');
+  const v=[...visible()].sort((a,b)=>b.comp-a.comp);
+  const ctx=document.getElementById('c-combo').getContext('2d');
+  charts['combo']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:v.map(d=>d.name.split(' ').slice(-1)[0]),
+      datasets:[
+        {type:'bar',label:'Comp ($M)',data:v.map(d=>d.comp),backgroundColor:v.map(d=>d.hire==='Internal'?'#b5d4f4':'#f7c1c1'),borderRadius:3,yAxisID:'y'},
+        {type:'line',label:'Rev growth %',data:v.map(d=>d.growth),borderColor:'#185fa5',backgroundColor:'#185fa522',borderWidth:2,pointRadius:4,tension:.35,yAxisID:'y2',spanGaps:true}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{position:'left',ticks:{callback:v=>'$'+v+'M',font:{size:9}},grid:{color:'rgba(0,0,0,.06)'}},
+        y2:{position:'right',ticks:{callback:v=>(v>=0?'+':'')+v+'%',font:{size:9}},grid:{display:false}},
+        x:{ticks:{font:{size:9}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function buildRadar(){
+  destroyChart('radar');
+  const intC=ALL.filter(d=>d.hire==='Internal');
+  const extC=ALL.filter(d=>d.hire==='External');
+  const norm=(val,mn,mx)=>Math.round(((val-mn)/(mx-mn))*100);
+  const iT=avg(intC,'tenure'),eT=avg(extC,'tenure');
+  const iG=avg(intC.filter(d=>d.growth!==null),'growth'),eG=avg(extC.filter(d=>d.growth!==null),'growth');
+  const iC=avg(intC,'comp'),eC=avg(extC,'comp');
+  const ctx=document.getElementById('c-radar').getContext('2d');
+  charts['radar']=new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:['Avg tenure','Rev growth','Compensation'],
+      datasets:[
+        {label:'Internal',data:[norm(iT,0,15),norm(iG,-10,35),norm(iC,0,80)],borderColor:INT_COL,backgroundColor:INT_COL+'44',borderWidth:2,pointRadius:4,pointBackgroundColor:INT_COL},
+        {label:'External',data:[norm(eT,0,15),norm(eG,-10,35),norm(eC,0,80)],borderColor:EXT_COL,backgroundColor:EXT_COL+'44',borderWidth:2,pointRadius:4,pointBackgroundColor:EXT_COL}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{r:{ticks:{display:false},grid:{color:'rgba(0,0,0,.1)'},pointLabels:{font:{size:10}}}}
+    }
+  });
+}
+
+function buildRatio(){
+  destroyChart('ratio');
+  const ctx=document.getElementById('c-ratio').getContext('2d');
+  charts['ratio']=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['Walmart','Microsoft','Gen. Motors','Amazon'],
+      datasets:[{
+        label:'CEO:worker ratio',
+        data:[930,408,310,43],
+        backgroundColor:['#ba7517','#185fa5','#378add','#85b7eb'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toLocaleString()+':1'}}},
+      scales:{
+        y:{ticks:{callback:v=>v.toLocaleString()+':1',font:{size:9}},grid:{color:'rgba(0,0,0,.06)'}},
+        x:{ticks:{font:{size:10}},grid:{display:false}}
+      }
+    }
+  });
+}
+
+function refresh(){
+  updateKPIs();buildTable();buildRevChart();buildScatter();buildCombo();buildRadar();buildRatio();
+}
+
+function setFilter(f){
+  hireFilter=f;
+  ['f-all','f-int','f-ext'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('on','red','green');});
+  const el=document.getElementById('f-'+f);
+  el.classList.add('on');
+  if(f==='External') el.classList.add('red');
+  if(f==='Internal') el.classList.add('green');
+  selectedRow=null;refresh();
+}
+
+function toggleInd(ind){
+  const el=document.getElementById('fi-'+ind);
+  if(indFilters.has(ind)){indFilters.delete(ind);el.classList.remove('on');}
+  else{indFilters.add(ind);el.classList.add('on');}
+  selectedRow=null;refresh();
+}
+
+refresh();
+</script>
+</body>
+</html>
