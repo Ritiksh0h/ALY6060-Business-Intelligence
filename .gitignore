@@ -1,0 +1,27 @@
+# Mac system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+# Node (if any scripts were run locally)
+node_modules/
+npm-debug.log*
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+# Temp and backup files
+*.tmp
+*.bak
+*.swp
+*~
+# Editor folders
+.vscode/
+.idea/
+# OS generated
+Icon?
