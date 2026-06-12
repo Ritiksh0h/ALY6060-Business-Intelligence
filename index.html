@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortune 500 CEO Dashboard — ALY6060</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f8f6;color:#1a1a18;padding:24px;min-height:100vh}
+.wrap{max-width:1160px;margin:0 auto}
+
+.banner{background:#1f3864;border-radius:12px;padding:18px 24px;margin-bottom:20px;color:#fff}
+.banner-q{font-size:16px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.banner-sub{font-size:12px;opacity:.75;line-height:1.5}
+
+.db-header{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid #e0dfd7;margin-bottom:18px}
+.db-title{font-size:17px;font-weight:600;color:#1a1a18}
+.db-sub{font-size:11px;color:#888780}
+
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+.filter-label{font-size:11px;color:#73726c;font-weight:600;margin-right:2px;white-space:nowrap}
+.chip{padding:5px 13px;border-radius:8px;border:1px solid #d3d1c7;font-size:11px;cursor:pointer;background:#fff;color:#5f5e5a;transition:all .15s;user-select:none;font-family:inherit;line-height:1}
+.chip:hover{border-color:#888780;color:#1a1a18}
+.chip.on{background:#e6f1fb;color:#0c447c;border-color:#85b7eb;font-weight:600}
+.chip.on.ext{background:#fcebeb;color:#791f1f;border-color:#f09595}
+.chip.on.int{background:#eaf3de;color:#27500a;border-color:#97c459}
+.sep{width:1px;height:18px;background:#d3d1c7;margin:0 3px;flex-shrink:0}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:10px;padding:16px 18px;border:1px solid #e8e7e0}
+.kpi-lbl{font-size:10px;color:#73726c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600}
+.kpi-val{font-size:24px;font-weight:700;color:#1a1a18;line-height:1}
+.kpi-sub{font-size:10px;color:#888780;margin-top:5px}
+.kpi-val.up{color:#1d9e75}.kpi-val.dn{color:#e24b4a}.kpi-val.bl{color:#185fa5}
+
+.main-row{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:#fff;border:1px solid #e8e7e0;border-radius:12px;padding:18px}
+.card-title{font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:2px}
+.card-sub{font-size:11px;color:#73726c;margin-bottom:12px;line-height:1.4}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#73726c}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* CEO checkboxes for comparison chart */
+.ceo-checks{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px}
+.ceo-cb-wrap{display:flex}
+.ceo-cb-label{display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;padding:4px 6px;border-radius:6px;border:1px solid #e8e7e0;background:#fafaf8;user-select:none;transition:all .15s;width:100%;white-space:nowrap;overflow:hidden}
+.ceo-cb-label:hover{border-color:#aaa}
+.ceo-cb-label input[type=checkbox]{width:11px;height:11px;cursor:pointer;accent-color:#185fa5;flex-shrink:0}
+.ceo-cb-label.int-lbl{border-left:3px solid #1d9e75}
+.ceo-cb-label.ext-lbl{border-left:3px solid #e24b4a}
+.ceo-cb-label.faded{opacity:.38;pointer-events:none}
+.ceo-cb-name{overflow:hidden;text-overflow:ellipsis}
+
+/* Dimension toggle */
+.dim-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.dim-lbl{font-size:10px;color:#73726c;font-weight:600}
+.dim-btn{padding:4px 10px;border-radius:6px;border:1px solid #d3d1c7;font-size:10px;cursor:pointer;background:#fff;color:#5f5e5a;font-family:inherit;font-weight:500;transition:all .15s;line-height:1}
+.dim-btn:hover{border-color:#888780;color:#1a1a18}
+.dim-btn.act{background:#185fa5;color:#fff;border-color:#185fa5;font-weight:700}
+
+/* Insight cards */
+.insight-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.ins-card{background:#fff;border:1px solid #e8e7e0;border-radius:12px;padding:18px}
+.ins-title{font-size:12px;font-weight:700;color:#1a1a18;margin-bottom:2px}
+.ins-sub{font-size:10px;color:#888780;margin-bottom:14px}
+
+/* Card 1: growth comparison */
+.gc-nums{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.gc-side{text-align:center;flex:1}
+.gc-val{font-size:30px;font-weight:800;line-height:1}
+.gc-lbl{font-size:10px;color:#73726c;margin-top:4px;font-weight:500}
+.gc-vs{font-size:20px;color:#d3d1c7;font-weight:300;padding:0 4px}
+.gc-gap{font-size:11px;background:#f5f4f0;border-radius:7px;padding:7px 12px;text-align:center;color:#5f5e5a}
+.gc-gap b{color:#1a1a18}
+
+/* Card 2: tenure bars */
+.tb-row{margin-bottom:12px}
+.tb-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.tb-name{font-size:11px;font-weight:700}
+.tb-num{font-size:13px;font-weight:700}
+.tb-track{background:#f0efe8;border-radius:5px;height:16px;overflow:hidden;position:relative}
+.tb-fill{height:100%;border-radius:5px;transition:width .4s ease}
+.tb-gap{font-size:11px;background:#f5f4f0;border-radius:7px;padding:7px 12px;text-align:center;color:#5f5e5a;margin-top:4px}
+.tb-gap b{color:#1a1a18}
+
+/* Card 3: gender grid */
+.gg-wrap{display:grid;grid-template-columns:60px 1fr 1fr;grid-template-rows:24px 1fr 1fr;gap:4px}
+.gg-corner{}
+.gg-col-hdr{font-size:10px;font-weight:700;color:#73726c;text-align:center;display:flex;align-items:center;justify-content:center}
+.gg-row-hdr{font-size:10px;font-weight:700;color:#73726c;text-align:right;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.gg-cell{border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;text-align:center}
+.gg-cell-num{font-size:26px;font-weight:800;line-height:1}
+.gg-cell-sub{font-size:9px;margin-top:3px;opacity:.75}
+.gg-note{font-size:10px;color:#888780;margin-top:10px;line-height:1.4}
+
+@media(max-width:760px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .main-row,.insight-row{grid-template-columns:1fr}
+  .ceo-checks{grid-template-columns:repeat(2,1fr)}
+  .db-header{flex-direction:column;gap:4px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="banner">
+  <div class="banner-q">Does internal vs. external hiring predict CEO success?</div>
+  <div class="banner-sub">ALY6060: Decision Support &amp; Business Intelligence &nbsp;·&nbsp; 10 Fortune 500 CEOs &nbsp;·&nbsp; 6 Industries &nbsp;·&nbsp; 2024 Data &nbsp;·&nbsp; Use filters to explore</div>
+</div>
+
+<div class="db-header">
+  <div class="db-title">Fortune 500 CEO Dashboard</div>
+  <div class="db-sub">Working With Business Partners &nbsp;·&nbsp; Select chips to cross-filter all charts</div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Hire type</span>
+  <span class="chip on" id="f-all" onclick="setHire('all')">All CEOs</span>
+  <span class="chip" id="f-int" onclick="setHire('Internal')">Internal</span>
+  <span class="chip" id="f-ext" onclick="setHire('External')">External</span>
+  <div class="sep"></div>
+  <span class="filter-label">Industry</span>
+  <span class="chip" id="fi-Tech" onclick="togInd('Tech')">Technology</span>
+  <span class="chip" id="fi-Health" onclick="togInd('Health')">Healthcare</span>
+  <span class="chip" id="fi-Finance" onclick="togInd('Finance')">Finance</span>
+  <span class="chip" id="fi-Other" onclick="togInd('Other')">Retail · Auto · Pharma</span>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-lbl">Avg Tenure</div>
+    <div class="kpi-val bl" id="kv-tenure">—</div>
+    <div class="kpi-sub" id="ks-tenure">years in role</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Avg Revenue Growth</div>
+    <div class="kpi-val" id="kv-growth">—</div>
+    <div class="kpi-sub" id="ks-growth">2024 fiscal year</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">Avg Compensation</div>
+    <div class="kpi-val" id="kv-comp">—</div>
+    <div class="kpi-sub">total 2024 ($M)</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-lbl">CEOs Shown</div>
+    <div class="kpi-val bl" id="kv-count">—</div>
+    <div class="kpi-sub" id="ks-count">of 10 total</div>
+  </div>
+</div>
+
+<div class="main-row">
+  <!-- Left: multi-CEO comparison chart -->
+  <div class="card">
+    <div class="card-title">CEO Multi-Select Comparison</div>
+    <div class="card-sub">Check/uncheck CEOs to compare side-by-side &nbsp;·&nbsp; Green = internal hire, Red = external hire</div>
+    <div class="ceo-checks" id="ceo-checks"></div>
+    <div class="dim-row">
+      <span class="dim-lbl">Metric:</span>
+      <button class="dim-btn act" id="db-growth" onclick="setDim('growth')">Revenue Growth</button>
+      <button class="dim-btn" id="db-tenure" onclick="setDim('tenure')">Tenure</button>
+      <button class="dim-btn" id="db-comp" onclick="setDim('comp')">Compensation</button>
+    </div>
+    <div class="legend">
+      <span class="leg-item"><span class="leg-dot" style="background:#1d9e75"></span>Internal hire</span>
+      <span class="leg-item"><span class="leg-dot" style="background:#e24b4a"></span>External hire</span>
+    </div>
+    <div style="position:relative;width:100%;height:250px">
+      <canvas id="c-compare"></canvas>
+    </div>
+  </div>
+
+  <!-- Right: quadrant scatter chart -->
+  <div class="card">
+    <div class="card-title">Tenure vs. Growth — Quadrant View</div>
+    <div class="card-sub">Bubble size = compensation &nbsp;·&nbsp; Dashed lines = dataset medians &nbsp;·&nbsp; Green = internal, Red = external</div>
+    <div class="legend">
+      <span class="leg-item"><span class="leg-dot" style="background:#1d9e75"></span>Internal</span>
+      <span class="leg-item"><span class="leg-dot" style="background:#e24b4a"></span>External</span>
+    </div>
+    <div style="position:relative;width:100%;height:314px">
+      <canvas id="c-quadrant"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Insight cards -->
+<div class="insight-row">
+
+  <!-- Card 1: Internal vs External avg growth -->
+  <div class="ins-card">
+    <div class="ins-title">Internal vs. External: Avg Growth</div>
+    <div class="ins-sub">Revenue growth, 2024 · excl. private/N/A · all 10 CEOs</div>
+    <div class="gc-nums">
+      <div class="gc-side">
+        <div class="gc-val" style="color:#1d9e75" id="ic-int-g">+11.1%</div>
+        <div class="gc-lbl">Internal avg (7 CEOs)</div>
+      </div>
+      <div class="gc-vs">vs</div>
+      <div class="gc-side">
+        <div class="gc-val" style="color:#e24b4a" id="ic-ext-g">−4.5%</div>
+        <div class="gc-lbl">External avg (2 with data)</div>
+      </div>
+    </div>
+    <div class="gc-gap">Gap: <b id="ic-gap">15.6 percentage points</b></div>
+  </div>
+
+  <!-- Card 2: Tenure gap by hire type -->
+  <div class="ins-card">
+    <div class="ins-title">Tenure Gap by Hire Type</div>
+    <div class="ins-sub">Average years in CEO role · all 10 CEOs</div>
+    <div class="tb-row">
+      <div class="tb-head">
+        <span class="tb-name" style="color:#1d9e75">Internal</span>
+        <span class="tb-num" style="color:#1d9e75" id="ic-int-t">10.0 yrs</span>
+      </div>
+      <div class="tb-track">
+        <div class="tb-fill" id="ic-int-tbar" style="background:#1d9e75;width:100%"></div>
+      </div>
+    </div>
+    <div class="tb-row">
+      <div class="tb-head">
+        <span class="tb-name" style="color:#e24b4a">External</span>
+        <span class="tb-num" style="color:#e24b4a" id="ic-ext-t">4.7 yrs</span>
+      </div>
+      <div class="tb-track">
+        <div class="tb-fill" id="ic-ext-tbar" style="background:#e24b4a;width:47%"></div>
+      </div>
+    </div>
+    <div class="tb-gap">Internal tenure lead: <b id="ic-t-gap">5.3 years</b></div>
+  </div>
+
+  <!-- Card 3: Gender × hire type grid -->
+  <div class="ins-card">
+    <div class="ins-title">Gender × Hire Type Overlap</div>
+    <div class="ins-sub">Count in each cell · all 10 CEOs</div>
+    <div class="gg-wrap">
+      <div class="gg-corner"></div>
+      <div class="gg-col-hdr">Male</div>
+      <div class="gg-col-hdr">Female</div>
+      <div class="gg-row-hdr">Internal</div>
+      <div class="gg-cell" style="background:#1d9e75;color:#fff">
+        <div class="gg-cell-num">6</div>
+        <div class="gg-cell-sub">Male · Internal</div>
+      </div>
+      <div class="gg-cell" style="background:#5cc49d;color:#fff">
+        <div class="gg-cell-num">1</div>
+        <div class="gg-cell-sub">Female · Internal</div>
+      </div>
+      <div class="gg-row-hdr">External</div>
+      <div class="gg-cell" style="background:#f0c0bf;color:#791f1f">
+        <div class="gg-cell-num">0</div>
+        <div class="gg-cell-sub">Male · External</div>
+      </div>
+      <div class="gg-cell" style="background:#e24b4a;color:#fff">
+        <div class="gg-cell-num">3</div>
+        <div class="gg-cell-sub">Female · External</div>
+      </div>
+    </div>
+    <div class="gg-note">All 3 external hires are women in healthcare/finance — industry structural confound; causal conclusions not supported at n=10.</div>
+  </div>
+
+</div><!-- end insight-row -->
+</div><!-- end .wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const DATA = [
+  {name:'Mary Barra',     short:'Barra',    co:'Gen. Motors',   ind:'Other',  gender:'F', tenure:11, comp:29.5, hire:'Internal', growth:-3},
+  {name:'Andy Jassy',     short:'Jassy',    co:'Amazon',        ind:'Tech',   gender:'M', tenure:4,  comp:40.1, hire:'Internal', growth:11},
+  {name:'Brian Moynihan', short:'Moynihan', co:'Bank of Amer.', ind:'Finance',gender:'M', tenure:15, comp:35.0, hire:'Internal', growth:2},
+  {name:'Satya Nadella',  short:'Nadella',  co:'Microsoft',     ind:'Tech',   gender:'M', tenure:11, comp:79.1, hire:'Internal', growth:16},
+  {name:'Sundar Pichai',  short:'Pichai',   co:'Alphabet',      ind:'Tech',   gender:'M', tenure:10, comp:10.7, hire:'Internal', growth:14},
+  {name:'Gail Boudreaux', short:'Boudreaux',co:'Elevance',      ind:'Health', gender:'F', tenure:7,  comp:20.5, hire:'External', growth:-4},
+  {name:'David Ricks',    short:'Ricks',    co:'Eli Lilly',     ind:'Other',  gender:'M', tenure:8,  comp:29.2, hire:'Internal', growth:32},
+  {name:'Doug McMillon',  short:'McMillon', co:'Walmart',       ind:'Other',  gender:'M', tenure:11, comp:27.4, hire:'Internal', growth:6},
+  {name:'T. Duckett',     short:'Duckett',  co:'TIAA',          ind:'Finance',gender:'F', tenure:4,  comp:18.0, hire:'External', growth:null},
+  {name:'Karen Lynch',    short:'Lynch',    co:'CVS Health',    ind:'Health', gender:'F', tenure:3,  comp:12.0, hire:'External', growth:-5},
+];
+
+// Precomputed medians from full dataset (CEOs with growth data only)
+const MED_TENURE = 10; // median tenure of 9 CEOs with known growth
+const MED_GROWTH = 6;  // median growth of 9 CEOs
+
+const INT = '#1d9e75', EXT = '#e24b4a', BLUE = '#185fa5';
+
+let hireFilter = 'all';
+let indFilters = new Set();
+let selectedCEOs = new Set(DATA.map(d => d.name));
+let activeDim = 'growth';
+let charts = {};
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function visible() {
+  return DATA.filter(d => {
+    if (hireFilter !== 'all' && d.hire !== hireFilter) return false;
+    if (indFilters.size > 0 && !indFilters.has(d.ind)) return false;
+    return true;
+  });
+}
+function avg(arr, key) {
+  const vals = arr.map(d => d[key]).filter(v => v !== null && v !== undefined);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+function fmtG(v) { return v === null ? 'N/A' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%'; }
+function fmtT(v) { return v === null ? '—' : v.toFixed(1) + ' yrs'; }
+function fmtC(v) { return v === null ? '—' : '$' + v.toFixed(1) + 'M'; }
+
+// ── KPIs ─────────────────────────────────────────────────────────────────────
+function updateKPIs() {
+  const v = visible();
+  const t = avg(v, 'tenure');
+  const g = avg(v.filter(d => d.growth !== null), 'growth');
+  const c = avg(v, 'comp');
+  const kG = document.getElementById('kv-growth');
+  document.getElementById('kv-tenure').textContent = t !== null ? t.toFixed(1) + ' yrs' : '—';
+  if (g !== null) { kG.textContent = fmtG(g); kG.className = 'kpi-val ' + (g >= 0 ? 'up' : 'dn'); }
+  else { kG.textContent = 'N/A'; kG.className = 'kpi-val'; }
+  document.getElementById('kv-comp').textContent = fmtC(c);
+  document.getElementById('kv-count').textContent = v.length;
+  document.getElementById('ks-tenure').textContent = 'avg across ' + v.length + ' CEO' + (v.length !== 1 ? 's' : '');
+  document.getElementById('ks-growth').textContent = v.some(d => d.growth === null) ? 'excl. private / N/A' : '2024 fiscal year';
+  document.getElementById('ks-count').textContent = 'of 10 total';
+}
+
+// ── CEO Checkboxes ────────────────────────────────────────────────────────────
+function buildCheckboxes() {
+  const visNames = new Set(visible().map(d => d.name));
+  const container = document.getElementById('ceo-checks');
+  container.innerHTML = '';
+  DATA.forEach(d => {
+    const active = visNames.has(d.name);
+    const wrap = document.createElement('div');
+    wrap.className = 'ceo-cb-wrap';
+    const lbl = document.createElement('label');
+    lbl.className = 'ceo-cb-label ' + (d.hire === 'Internal' ? 'int-lbl' : 'ext-lbl') + (active ? '' : ' faded');
+    lbl.title = d.name + ' · ' + d.co + ' (' + d.hire + ')';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = active && selectedCEOs.has(d.name);
+    cb.disabled = !active;
+    cb.onchange = () => {
+      if (cb.checked) selectedCEOs.add(d.name);
+      else selectedCEOs.delete(d.name);
+      buildCompareChart();
+    };
+    const span = document.createElement('span');
+    span.className = 'ceo-cb-name';
+    span.textContent = d.short;
+    lbl.appendChild(cb);
+    lbl.appendChild(span);
+    wrap.appendChild(lbl);
+    container.appendChild(wrap);
+  });
+}
+
+// ── Comparison Chart ──────────────────────────────────────────────────────────
+function buildCompareChart() {
+  if (charts.cmp) { charts.cmp.destroy(); delete charts.cmp; }
+
+  const visNames = new Set(visible().map(d => d.name));
+  const active = DATA.filter(d => selectedCEOs.has(d.name) && visNames.has(d.name));
+
+  const dimMap = { growth: 'growth', tenure: 'tenure', comp: 'comp' };
+  const axisLabels = { growth: 'Revenue Growth (%)', tenure: 'Tenure (years)', comp: 'Compensation ($M)' };
+  const tickFmts = {
+    growth: v => (v >= 0 ? '+' : '') + v + '%',
+    tenure: v => v + 'yr',
+    comp: v => '$' + v + 'M',
+  };
+  const tooltipFmts = {
+    growth: (d, v) => (v !== null ? (v >= 0 ? '+' : '') + v + '%' : 'N/A (private)') + '  ·  ' + d.hire,
+    tenure: (d, v) => v + ' years  ·  ' + d.hire,
+    comp: (d, v) => '$' + v + 'M  ·  ' + d.hire,
+  };
+
+  const vals = active.map(d => d[dimMap[activeDim]]);
+
+  const ctx = document.getElementById('c-compare').getContext('2d');
+  charts.cmp = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: active.map(d => d.short),
+      datasets: [{
+        label: axisLabels[activeDim],
+        data: vals,
+        backgroundColor: active.map(d => d.hire === 'Internal' ? INT + 'bb' : EXT + 'bb'),
+        borderColor: active.map(d => d.hire === 'Internal' ? INT : EXT),
+        borderWidth: 1.5,
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: c => active[c[0].dataIndex].name,
+            label: c => '  ' + tooltipFmts[activeDim](active[c.dataIndex], c.raw),
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: 'rgba(0,0,0,.06)' },
+          ticks: { font: { size: 10 }, callback: tickFmts[activeDim] },
+          title: { display: true, text: axisLabels[activeDim], font: { size: 10 }, color: '#73726c' },
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 } },
+        }
+      }
+    }
+  });
+}
+
+// ── Quadrant Chart ────────────────────────────────────────────────────────────
+const quadPlugin = {
+  id: 'quadPlugin',
+  beforeDraw(chart) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+    const { left, right, top, bottom } = chartArea;
+    const xS = chart.scales.x, yS = chart.scales.y;
+    const mx = xS.getPixelForValue(MED_TENURE);
+    const my = yS.getPixelForValue(MED_GROWTH);
+
+    ctx.save();
+    // Quadrant fills
+    ctx.fillStyle = 'rgba(29,158,117,0.08)';  // top-right: high tenure + high growth
+    ctx.fillRect(mx, top, right - mx, my - top);
+    ctx.fillStyle = 'rgba(24,95,165,0.05)';   // top-left: new + high growth
+    ctx.fillRect(left, top, mx - left, my - top);
+    ctx.fillStyle = 'rgba(24,95,165,0.05)';   // bottom-right: high tenure + low growth
+    ctx.fillRect(mx, my, right - mx, bottom - my);
+    ctx.fillStyle = 'rgba(226,75,74,0.08)';   // bottom-left: new + low growth
+    ctx.fillRect(left, my, mx - left, bottom - my);
+
+    // Median lines
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(mx, top); ctx.lineTo(mx, bottom); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(left, my); ctx.lineTo(right, my); ctx.stroke();
+    ctx.restore();
+
+    // Quadrant labels
+    ctx.font = '9px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'right'; ctx.fillText('High Tenure · High Growth', right - 5, top + 5);
+    ctx.textAlign = 'left';  ctx.fillText('New · High Growth', left + 5, top + 5);
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'right'; ctx.fillText('High Tenure · Low Growth', right - 5, bottom - 5);
+    ctx.textAlign = 'left';  ctx.fillText('New · Low Growth', left + 5, bottom - 5);
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    chart.data.datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((pt, pi) => {
+        const d = ds.data[pi];
+        if (!d || !d.label) return;
+        ctx.save();
+        ctx.font = 'bold 9px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+        ctx.fillStyle = ds.borderColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(d.label, pt.x, pt.y - pt.radius - 2);
+        ctx.restore();
+      });
+    });
+  }
+};
+
+function buildQuadrant() {
+  if (charts.quad) { charts.quad.destroy(); delete charts.quad; }
+
+  const v = visible();
+  const intD = v.filter(d => d.hire === 'Internal' && d.growth !== null)
+    .map(d => ({ x: d.tenure, y: d.growth, r: Math.max(6, Math.sqrt(d.comp) * 1.5), label: d.short }));
+  const extD = v.filter(d => d.hire === 'External' && d.growth !== null)
+    .map(d => ({ x: d.tenure, y: d.growth, r: Math.max(6, Math.sqrt(d.comp) * 1.5), label: d.short }));
+
+  const ctx = document.getElementById('c-quadrant').getContext('2d');
+  charts.quad = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label: 'Internal', data: intD, backgroundColor: INT + '55', borderColor: INT, borderWidth: 2 },
+        { label: 'External', data: extD, backgroundColor: EXT + '55', borderColor: EXT, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => c.raw.label + ' — ' + c.raw.x + ' yrs tenure, ' + fmtG(c.raw.y) + ' growth'
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Tenure (years)', font: { size: 10 }, color: '#73726c' },
+          min: 0, max: 18,
+          grid: { color: 'rgba(0,0,0,.06)' },
+          ticks: { font: { size: 10 } }
+        },
+        y: {
+          title: { display: true, text: 'Revenue Growth (%)', font: { size: 10 }, color: '#73726c' },
+          min: -12, max: 38,
+          grid: { color: 'rgba(0,0,0,.06)' },
+          ticks: { callback: v => fmtG(v), font: { size: 10 } }
+        }
+      },
+      layout: { padding: { top: 18, right: 12, bottom: 4, left: 4 } }
+    },
+    plugins: [quadPlugin]
+  });
+}
+
+// ── Dimension toggle ──────────────────────────────────────────────────────────
+function setDim(dim) {
+  activeDim = dim;
+  ['growth', 'tenure', 'comp'].forEach(d => {
+    document.getElementById('db-' + d).classList.toggle('act', d === dim);
+  });
+  buildCompareChart();
+}
+
+// ── Hire filter ───────────────────────────────────────────────────────────────
+function setHire(f) {
+  hireFilter = f;
+  ['all', 'int', 'ext'].forEach(id => {
+    const el = document.getElementById('f-' + id);
+    el.classList.remove('on', 'ext', 'int');
+  });
+  const el = document.getElementById('f-' + f);
+  el.classList.add('on');
+  if (f === 'External') el.classList.add('ext');
+  if (f === 'Internal') el.classList.add('int');
+  // Re-check all visible CEOs
+  const visNames = new Set(visible().map(d => d.name));
+  visNames.forEach(n => selectedCEOs.add(n));
+  refresh();
+}
+
+// ── Industry filter ───────────────────────────────────────────────────────────
+function togInd(ind) {
+  const el = document.getElementById('fi-' + ind);
+  if (indFilters.has(ind)) { indFilters.delete(ind); el.classList.remove('on'); }
+  else { indFilters.add(ind); el.classList.add('on'); }
+  refresh();
+}
+
+// ── Refresh ───────────────────────────────────────────────────────────────────
+function refresh() {
+  updateKPIs();
+  buildCheckboxes();
+  buildCompareChart();
+  buildQuadrant();
+}
+
+refresh();
+</script>
+</body>
+</html>
